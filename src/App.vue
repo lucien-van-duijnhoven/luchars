@@ -8,7 +8,14 @@ export default {
       isHighlighted: false,
       history: [],
       historyItem: { letter: 'a', tries: 0 },
-      charOptions: []
+      charOptions: [],
+      mode: 'alpha'
+    }
+  },
+  watch: {
+    mode() {
+      this.createCharOptions();
+      console.log(this.charOptions);
     }
   },
   computed: {
@@ -43,10 +50,19 @@ export default {
         this.historyItem = { letter: this.letterToType, tries: 0 }
         this.input = '';
       }
-    }
+    },
+    createCharOptions() {
+      if (this.mode === 'alpha') {
+        this.charOptions = new Array(26).fill(0).map((_, i) => i).map((number) => String.fromCharCode(number + 'a'.charCodeAt(0)));
+      } else if (this.mode === 'full') {
+        this.charOptions = new Array(126).fill(0).map((_, i) => i).filter((charCode) => charCode >= ' '.charCodeAt(0)).map((charCode) => String.fromCharCode(charCode)).concat(modifierKeys).concat(whitespaceKeys);
+      } else if (this.mode === 'uppercased') {
+        this.charOptions = new Array(26).fill(0).map((_, i) => i).reduce((acc, number) => [...acc, String.fromCharCode(number + 'A'.charCodeAt(0)), String.fromCharCode(number + 'a'.charCodeAt(0))], [])
+      }
+    },
   },
   created() {
-    this.charOptions = new Array(126).fill(0).map((_, i) => i).filter((charCode) => charCode >= ' '.charCodeAt(0)).map((charCode) => String.fromCharCode(charCode)).concat(modifierKeys).concat(whitespaceKeys);
+    this.createCharOptions();
     console.log(this.charOptions);
   },
   mounted() {
@@ -57,6 +73,12 @@ export default {
 
 <template>
   <div>
+    <label for="">mode:
+      <select name="" v-model="mode" id="">
+        <option value="alpha">alpha</option>
+        <option value="full">full</option>
+        <option value="uppercased">uppercased</option>
+      </select> </label>
     <div class='letter-row'>
       <div class="letterDubble letter">a</div>
       <h1 class='letter'>{{ letterToType }}</h1>
