@@ -1,4 +1,5 @@
 <script>
+import { modifierKeys, whitespaceKeys } from './keys';
 export default {
   data() {
     return {
@@ -6,18 +7,32 @@ export default {
       input: '',
       isHighlighted: false,
       history: [],
-      historyItem: { letter: 'a', tries: 0 }
+      historyItem: { letter: 'a', tries: 0 },
+      charOptions: []
     }
   },
-  watch: {
-    input() {
-      console.log(this.input);
-      const charCodeLastInput = this.input.charCodeAt(this.input.length - 1);
-      if ((charCodeLastInput > 'a'.charCodeAt(0) && charCodeLastInput < 'z'.charCodeAt())) {
+  computed: {
+    historyLenght() {
+      return this.history.length;
+    }
+  },
+  methods: {
+    getRandomChar() {
+      return this.charOptions[Math.floor(Math.random() * this.charOptions.length)];
+    },
+    toggleFocus() {
+      this.isHighlighted = !this.isHighlighted;
+    },
+    handleKeypress(e) {
+      console.group('keypress');
+      console.log('keypress', e);
+      console.log('keypress code', e.which);
+      console.log('keypress key', e.key);
+      console.groupEnd();
+      if (this.charOptions.includes(e.key)) {
         this.historyItem.tries++;
-        console.log("iterate", this.historyItem);
       }
-      if (this.letterToType === this.input) {
+      if (this.letterToType === e.key) {
         // const parsedHistoryItem = {
         //   ...this.historyItem,
         //   tries: Math.ceil(this.historyItem.tries / 2)
@@ -28,40 +43,25 @@ export default {
         this.historyItem = { letter: this.letterToType, tries: 0 }
         this.input = '';
       }
-    },
-  },
-  computed: {
-    historyLenght() {
-      return this.history.length;
     }
   },
-  methods: {
-    getRandomChar() {
-      const min = 'a'.charCodeAt(0);
-      const max = 'z'.charCodeAt(0);
-      let randomNum = Math.floor(Math.random() * (max - min + 1) + min);
-      return String.fromCharCode(randomNum);
-    },
-    toggleFocus() {
-      this.isHighlighted = !this.isHighlighted;
-    },
-    handleKeypress(e) {
-      console.log(e);
-      console.log(e.data);
-      if (e.data && (e.data.charCodeAt(0) >= 'a'.charCodeAt(0) && e.data.charCodeAt(0) <= 'z'.charCodeAt(0))) {
-        console.log('valid');
-      }
-    }
+  created() {
+    this.charOptions = new Array(126).fill(0).map((_, i) => i).filter((charCode) => charCode >= ' '.charCodeAt(0)).map((charCode) => String.fromCharCode(charCode)).concat(modifierKeys).concat(whitespaceKeys);
+    console.log(this.charOptions);
   },
+  mounted() {
+    window.addEventListener('keydown', this.handleKeypress);
+  }
 }
 </script>
 
 <template>
   <div>
     <div class='letter-row'>
-      <h1 class=''>{{ letterToType }}</h1>
+      <div class="letterDubble letter">a</div>
+      <h1 class='letter'>{{ letterToType }}</h1>
     </div>
-    <input class='char-input' v-model='input' @input='handleKeypress' @focus='toggleFocus' @blur='toggleFocus'
+    <input class='char-input' v-model='input' @input='' @focus='toggleFocus' @blur='toggleFocus'
       :class='{ highlighted: isHighlighted }' type="text" @change='newLetter'>
   </div>
   <div class='container'>
@@ -84,6 +84,47 @@ export default {
 
 .container {
   overflow: auto;
+}
+
+.letter-row {
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  margin: auto;
+}
+
+.letter {
+  display: absolute;
+  position: absolute;
+  font-size: 3.2em;
+  margin: auto;
+}
+
+.letterDubble {
+  color: blueviolet;
+  /* top: 90px; */
+}
+
+.letterDubbleActive {
+  color: red;
+  animation: move-and-fade 1s ease-in-out;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
+@keyframes move-and-fade {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(-100px);
+  }
 }
 
 ul>* {
